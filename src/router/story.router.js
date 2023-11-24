@@ -3,7 +3,7 @@ const router = express.Router();
 const Story = require("../models/story.schema");
 const { verifyJwt } = require("../middleware/auth.middleware");
 
-router.get("/view-story", verifyJwt, async (req, res) => {
+router.get("/view-story", async (req, res) => {
   try {
     const story = await Story.find();
     res.json({ message: "Story fetched", success: true, data: story });
@@ -34,11 +34,12 @@ router.post("/add-story", verifyJwt, async (req, res) => {
   }
 });
 
-router.put("/update-story", verifyJwt, async (req, res) => {
+router.put("/update-story/:storyId", verifyJwt, async (req, res) => {
   try {
-    const { sid } = req.body;
-    await Story.updateMany(
-      { _id: sid },
+    console.log("updating");
+    const { sid } = req.params;
+    await Story.updateOne(
+      { id: sid },
       {
         $set: {
           heading: req.body.heading,
@@ -66,11 +67,14 @@ router.delete("/delete-story", verifyJwt, async (req, res) => {
   }
 });
 
-router.get("filter-story", verifyJwt, async (req, res) => {
+router.get("/filter-story", async (req, res) => {
   try {
     const { category } = req.body;
-    const story = await Story.find({ category: category });
-    res.json({ message: "Story fetched", success: true, data: story });
+    const stories = await Story.find({ "story.category": category });
+    const result = stories.filter((data) => {
+      return data.story.category === category;
+    });
+    res.json({ message: "Story fetched", success: true, data: result });
   } catch (err) {
     console.log("unable to fetch story", err);
     return res
@@ -79,7 +83,7 @@ router.get("filter-story", verifyJwt, async (req, res) => {
   }
 });
 
-router.get("/view-story/:storyId", verifyJwt, async (req, res) => {
+router.get("/view-story/:storyId", async (req, res) => {
   try {
     const { storyId } = req.params;
     const story = await Story.findById({ _id: storyId });

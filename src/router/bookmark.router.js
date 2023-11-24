@@ -6,9 +6,9 @@ const Bookmark = require("../models/bookmark.schema");
 const { verifyJwt } = require("../middleware/auth.middleware");
 
 // Bookmark a story
-router.put("/:storyId/bookmark", verifyJwt, async (req, res) => {
+router.post("/:storyId", verifyJwt, async (req, res) => {
   try {
-    const { userId } = req.body;
+    const userId = req.locals.user._id;
     const { storyId } = req.params;
 
     const user = await User.findById(userId);
@@ -26,11 +26,23 @@ router.put("/:storyId/bookmark", verifyJwt, async (req, res) => {
     }
 
     // Add to user's bookmarks
-    const bookmark = await new Bookmark({
-      storyId,
-      userId,
-    });
-    await bookmark.save();
+    // const bookmark = await new Bookmark({
+    //   storyId,
+    //   userId,
+    // });
+    // await bookmark.save();
+    await Bookmark.updateOne(
+      { storyId, userId },
+      {
+        $set: {
+          storyId,
+          userId,
+        },
+      },
+      {
+        upsert: true,
+      }
+    );
 
     return res.status(200).json({ message: "Story bookmarked", success: true });
   } catch (err) {
@@ -42,28 +54,27 @@ router.put("/:storyId/bookmark", verifyJwt, async (req, res) => {
 });
 
 // Unbookmark a story
-router.put("/:storyId/unbookmark", verifyJwt, async (req, res) => {
+router.delete("/:bookmarkId", verifyJwt, async (req, res) => {
   try {
-    const { userId } = req.body;
-    const { storyId } = req.params;
+    const userId = req.locals.user._id;
+    const { bookmarkId } = req.params;
 
     const user = await User.findById(userId);
-    if (!user) {
-      return res
-        .status(404)
-        .json({ message: "user not found", success: false });
-    }
-    bookmark = await Bookmark.findOne({ userId: userId, storyId: storyId });
+    const bookmark = await Bookmark.findById(bookmarkId);
     if (!bookmark) {
       return res
         .status(404)
         .json({ message: "bookmark not found", success: false });
     }
-
-    // Remove storyId from user's bookmarks
-    bookmark = bookmark.filter((id) => String(id) !== storyId);
-    await bookmark.save();
-
+    if (!user) {
+      return res
+        .status(404)
+        .json({ message: "user not found", success: false });
+    }
+    await Bookmark.deleteOne({
+      userId: userId,
+      id: bookmarkId,
+    });
     return res
       .status(200)
       .json({ message: "Story unbookmarked", success: true });
