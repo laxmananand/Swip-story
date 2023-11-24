@@ -28,7 +28,9 @@ router.post("/add-story", verifyJwt, async (req, res) => {
       .json({ message: "Story created successfully", success: true });
   } catch (err) {
     console.log("unable to create Story", err);
-    return res.status(500).send("internal server error");
+    return res
+      .status(500)
+      .json({ message: "internal server error", success: false });
   }
 });
 
@@ -46,9 +48,47 @@ router.put("/update-story", verifyJwt, async (req, res) => {
         },
       }
     );
-    res.json({ message: "Story updated successfully", success: true });
+    return res.json({ message: "Story updated successfully", success: true });
   } catch (err) {
     console.log("Unable to update a story", err);
+    return res.json({ message: "internal server error", success: false });
+  }
+});
+
+router.delete("/delete-story", verifyJwt, async (req, res) => {
+  try {
+    const { sid } = req.body;
+    await Story.deleteOne({ _id: sid });
+    return res.json({ message: "Story deleted successfully", success: true });
+  } catch (err) {
+    console.log("Unable to delete a story", err);
+    return res.json({ message: "internal server error", success: false });
+  }
+});
+
+router.get("filter-story", verifyJwt, async (req, res) => {
+  try {
+    const { category } = req.body;
+    const story = await Story.find({ category: category });
+    res.json({ message: "Story fetched", success: true, data: story });
+  } catch (err) {
+    console.log("unable to fetch story", err);
+    return res
+      .status(500)
+      .json({ message: "internal server error", success: false });
+  }
+});
+
+router.get("/view-story/:storyId", verifyJwt, async (req, res) => {
+  try {
+    const { storyId } = req.params;
+    const story = await Story.findById({ _id: storyId });
+    res.json({ message: "Story fetched", success: true, data: story });
+  } catch (err) {
+    console.log("unable to fetch story", err);
+    return res
+      .status(500)
+      .json({ message: "internal server error", success: false });
   }
 });
 
