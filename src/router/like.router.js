@@ -76,7 +76,7 @@ router.delete("/:likeId", verifyJwt, async (req, res) => {
     // await like.save();
     await Like.deleteOne({
       userId: userId,
-      id: likeId,
+      _id: likeId,
     });
     return res.status(200).json({ message: "Story unliked", success: true });
   } catch (err) {

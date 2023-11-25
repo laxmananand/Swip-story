@@ -58,7 +58,7 @@ router.delete("/:bookmarkId", verifyJwt, async (req, res) => {
   try {
     const userId = req.locals.user._id;
     const { bookmarkId } = req.params;
-
+    console.log(userId);
     const user = await User.findById(userId);
     const bookmark = await Bookmark.findById(bookmarkId);
     if (!bookmark) {
@@ -73,7 +73,7 @@ router.delete("/:bookmarkId", verifyJwt, async (req, res) => {
     }
     await Bookmark.deleteOne({
       userId: userId,
-      id: bookmarkId,
+      _id: bookmarkId,
     });
     return res
       .status(200)

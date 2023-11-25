@@ -37,22 +37,39 @@ router.post("/add-story", verifyJwt, async (req, res) => {
 router.put("/update-story/:storyId", verifyJwt, async (req, res) => {
   try {
     console.log("updating");
-    const { sid } = req.params;
-    await Story.updateOne(
-      { id: sid },
+    const { storyId } = req.params;
+    const { story } = req.body;
+    console.log(storyId);
+    const result = await Story.updateOne(
+      { _id: storyId },
       {
-        $set: {
-          heading: req.body.heading,
-          description: req.body.description,
-          imageUrl: req.body.imageUrl,
-          category: req.body.category,
-        },
+        story: story.map((data) => {
+          return {
+            heading: data.heading,
+            description: data.heading,
+            imageUrl: data.imageUrl,
+            category: data.category,
+          };
+        }),
       }
     );
-    return res.json({ message: "Story updated successfully", success: true });
+    console.log({ result });
+    if (result.modifiedCount)
+      return res
+        .status(200)
+        .json({ message: "Story updated successfully", success: true });
+    if (!result.matchedCount || !result.modifiedCount)
+      return res
+        .status(400)
+        .json({
+          messsage: "couldn't update the story, invalid id",
+          success: false,
+        });
   } catch (err) {
     console.log("Unable to update a story", err);
-    return res.json({ message: "internal server error", success: false });
+    return res
+      .status(500)
+      .json({ message: "internal server error", success: false });
   }
 });
 
